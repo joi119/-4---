@@ -9,6 +9,9 @@
       <a href="#/access">
         <h1>欢迎来到心灵家园，点此至登陆界面</h1>
       </a>
+      <a href="#/profile">
+        <h1>点我在线修改资料</h1>
+      </a>
     </div>
   </div>
 </template>

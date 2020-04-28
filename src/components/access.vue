@@ -13,36 +13,36 @@
         <input placeholder="     Search url here">
         <button id="btn">search</button>
       </div>
-
+      <!--注册-->
       <div id="sign_in" >
         <div id="form1">
           <form class="sign_up" action="" method="" name="">
             <div class="input">
               <span>Username:</span>
-              <input type="text" required="required">
+              <input type="text" required="required" v-model="username">
             </div>
             <div class="input">
               <span>Password:</span>
-              <input type="password">
+              <input type="password" v-model="password_hash">
             </div>
             <div class="input">
               <span>Password Again:</span>
-              <input type="password">
+              <input type="password" v-model="repeatpassword">
             </div>
             <div class="input">
               <span>Telephone:</span>
-              <input type="tel">
+              <input type="tel" v-model="telephone" @change="tel">
             </div>
             <div class="input">
               <span>E-mail:</span>
-              <input type="email">
+              <input type="email" v-model="email_hash" @change="email">
             </div>
             <div class="input">
               <span>Country:</span>
-              <input type="text">
+              <input type="text" v-model="country">
             </div>
             <div class="btn_sign">
-              <button class="btn_sign_in">sign up</button>
+              <button class="btn_sign_in" @click="submit_register">sign up</button>
             </div>
             <span class="way">其他注册方式</span>
             <img class="img11" src="../../static/img11.jpeg" height="54" width="52"/>
@@ -50,19 +50,19 @@
             <img class="img13" src="../../static/img13.jpeg" height="52" width="55"/>
           </form>
         </div>
-
+        <!--登录-->
         <div id="form2">
           <form class="sign_in" action="" method="" name="">
             <div class="input">
               <span>Username:</span>
-              <input type="text">
+              <input type="text" v-model="username">
             </div>
             <div class="input">
               <span>Password:</span>
-              <input type="password">
+              <input typ e="password" v-model="password_hash">
             </div>
             <div class="btn_sign">
-              <button class="btn_sign_in">sign up</button>
+              <button class="btn_sign_in" @click="submit_login">sign up</button>
             </div>
             <span class="way">其他登录方式</span>
             <img class="img11" src="../../static/img11.jpeg" height="54" width="52"/>
@@ -80,7 +80,13 @@
       name: "access",
       data(){
         return{
-          msg:'hello'
+          username:'',
+          password_hash:'',
+          repeatpassword:'',
+          telephone:'',
+          email_hash:'',
+          country:'',
+          register_bool:'',
         }
       },
       methods: {
@@ -100,6 +106,77 @@
           form2.style.display="block";
           form1.style.display="none";
         },
+        //此处为注册
+        //需返回判断值（优化：在界面上直接判断哪里没有专一性）
+        //需要先判断输入的内容对不对（电话、邮件合法吗，两次密码一样吗
+        tel:function(){
+          let phone=/^1[345789]\d{9}$/;
+          if (!phone.test(this.telephone)) {
+            alert("请输入正确的手机号");
+            this.telephone = "";
+          }
+        },
+        email:function(){
+          let email = /^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,4}$/;
+          if (!email.test(this.email_hash)) {
+            alert("请输入正确的邮箱");
+            this.email_hash = "";
+          }
+        },
+        submit_register:function(){
+          let qs = require('qs');
+          const that=this;
+          this.axios.post('http://114.55.98.156:3000/register',
+            qs.stringify({
+              username:this.username,
+              password_hash:this.password_hash,
+              repeatpassword:this.repeatpassword,
+              telephone:this.telephone,
+              email_hash:this.email_hash,
+              country:this.country
+            }))
+            .then(function (response) {
+              console.log(response);
+              //如果注册成功则跳转至profile界面（需拼接路由（这个路由直接跳转有页面吗？）），若不成功则弹窗提示并返回注册界面
+              if(response.data[0].AAB==="true"){
+                console.log("success");
+                that.$router.push({name:'/profile',params:{username:'this.username'}});
+              }else{
+                console.log("fail");
+                alert("注册不成功，请再试！");
+                that.$router.push('/');
+              }
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        },
+
+        //此处为登录
+        submit_login:function () {
+          let qs = require('qs');
+          const that=this;
+          this.axios.post('http://114.55.98.156:3000/login',
+            qs.stringify({
+            username:this.username,
+            password_hash:this.password_hash,
+          }))
+            .then(function (res) {
+              console.log(response);
+              if(response.data[0].AAB==="true"){
+                console.log("success");
+                that.$router.push({name:'/profile',params:{username:'this.username'}});
+              }else{
+                console.log("fail");
+                alert("用户名或密码错误，请重新登录！");
+                that.$router.push('/');
+              }
+          })
+            .catch(function (error) {
+              console.log(error);
+            });
+        },
+
       },
     }
 </script>

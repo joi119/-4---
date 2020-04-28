@@ -12,13 +12,16 @@
   <div id="profile">
     <h1>Profile</h1>
     <input placeholder="   Search for messages or users...">
-    <img id="img17" src="../../static/img17.jpg" height="38" width="34"/>
+    <img id="img17" src="../../static/img17.jpg" height="38" width="34" @click="search" />
     <div id="photo_name">
       <div id="photo"></div>
       <div id="name"></div>
     </div>
     <div id="info">
-      <div class="info">country</div>
+      <div class="info">
+        <p>country</p>
+        <p></p>
+      </div>
       <div class="info">country</div>
       <div class="info">country</div>
       <div class="info">country</div>
@@ -42,19 +45,22 @@
         </div>
         <span>Avatar</span>
         <div id="icon">
-          <div id="img18">
-            <img src="../../static/img18.png" height="45" width="53"/>
-          </div>
+          <label for="img18.png">
+            <div id="img18">
+              <img src="../../static/img18.png" height="45" width="53" @click="add_img"/>
+            </div>
+          </label>
+          <input type="file" id="img18.png" name="icon" style="display: none">
           <span class="photo1">You can upload jpg,gif or png files.</span><br>
           <span class="photo2">Max files size 3mb.</span>
         </div>
         <span>Name</span><br>
-        <input class="name" placeholder="Type your name" type="text"><br>
+        <input class="name" placeholder="Type your name" type="text" v-model="username"><br>
         <span>Phone</span><br>
-        <input id="phone" placeholder="(123)456-7890" type="tel"><br>
+        <input id="phone" placeholder="(123)456-7890" type="tel" v-model="telephone"><br>
         <span>Email</span><br>
-        <input id="email" placeholder="you@yoursite.com" type="email"><br>
-        <button>Save Preferences</button>
+        <input id="email" placeholder="you@yoursite.com" type="email" v-model="email"><br>
+        <button @click="save">Save Preferences</button>
       </form>
     </div>
   </div>
@@ -63,7 +69,82 @@
 
 <script>
     export default {
-        name: "profile"
+        name: "profile",
+        data(){
+          return{
+            img:'',
+            img_url:'',
+            username:'',
+            telephone:'',
+            email:'',
+            country:'',
+            time:'',
+          }
+        },
+        methods:{
+          //搜索框
+          search:function () {
+            this.axios.get('http://114.55.98.156:3000/auth/search',{
+              headers: {
+                // 'Content-Type': 'multipart/form-data'
+              }
+            }).then(function (res) {
+
+            })
+          },
+          //上传图片
+          add_img:function (event) {
+            let reader = new FileReader();
+            let img = event.target.files[0];
+            let accept = [".gif",".png",".jpg"];
+            let filePath = img.value; //文件的类型，判断是否是图片
+            let fileEnd=filePath.substring(filePath.indexOf("."));
+            let size = img.size; //文件的大小，判断图片的大小
+            let isNext=false;
+            for(let i=0;i<accept.length;i++){
+              if (fileEnd===accept[i]) {
+                isNext=true;
+                break;
+              }
+            }
+            if(!isNext){
+              alert('请选择我们支持的图片格式！');
+              return false;
+            }
+
+            //图片的大小(字节)
+            if (size > 3145728) {
+              alert('请选择3mb以内的图片！');
+              return false;
+            }
+            let form = new FormData();
+            form.append('file', icon);
+            //接口部分
+            this.axios.post("http://114.55.98.156:3000/auth/updates",{
+              //请求头
+              headers: {
+                // 'Content-Type': 'multipart/form-data'
+              }
+            }).then(response => {
+              console.log(response.data);
+              reader.readAsDataURL(img);//读出base64
+              reader.onloadend = function() {
+                let dataURL = reader.result;
+                console.log(dataURL);
+                this.img_url = dataURL;//src
+              }
+            }).catch(function(err) {
+              console.log(err);
+            });
+          },
+          //修改保存资料
+          save:function(){
+
+          },
+        },
+      mounted() {
+
+      }
     }
 </script>
 
