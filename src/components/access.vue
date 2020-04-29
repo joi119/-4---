@@ -11,7 +11,8 @@
         <div id="sign_inn" @click="sign_in">Sign in</div>
         <div id="sign_up" @click="sign_up">Sign up</div>
         <input placeholder="     Search url here">
-        <button id="btn">search</button>
+        <button id="btn" @click="search">search</button>
+        <div>{{search_id}}</div>
       </div>
       <!--注册-->
       <div id="sign_in" >
@@ -27,7 +28,7 @@
             </div>
             <div class="input">
               <span>Password Again:</span>
-              <input type="password" v-model="repeatpassword">
+              <input type="password" v-model="repeatpassword" @change="pwd">
             </div>
             <div class="input">
               <span>Telephone:</span>
@@ -87,6 +88,8 @@
           email_hash:'',
           country:'',
           register_bool:'',
+          userid:'',
+          search_id:'',
         }
       },
       methods: {
@@ -123,6 +126,15 @@
             this.email_hash = "";
           }
         },
+        pwd:function(){
+          if(this.password_hash===this.repeatpassword){
+
+          }else{
+            alert("两次输入的密码不同，请重新输入");
+            this.password_hash="";
+            this.repeatpassword="";
+          }
+        },
         submit_register:function(){
           let qs = require('qs');
           const that=this;
@@ -140,7 +152,8 @@
               //如果注册成功则跳转至profile界面（需拼接路由（这个路由直接跳转有页面吗？）），若不成功则弹窗提示并返回注册界面
               if(response.data[0].AAB==="true"){
                 console.log("success");
-                that.$router.push({name:'/profile',params:{username:'this.username'}});
+                alert("注册成功！请登录！");
+                that.$router.push('/');
               }else{
                 console.log("fail");
                 alert("注册不成功，请再试！");
@@ -161,11 +174,11 @@
             username:this.username,
             password_hash:this.password_hash,
           }))
-            .then(function (res) {
+            .then(function (response) {
               console.log(response);
               if(response.data[0].AAB==="true"){
                 console.log("success");
-                that.$router.push({name:'/profile',params:{username:'this.username'}});
+                that.$router.push({ path: '/profile/id="this.username"' });
               }else{
                 console.log("fail");
                 alert("用户名或密码错误，请重新登录！");
@@ -175,6 +188,18 @@
             .catch(function (error) {
               console.log(error);
             });
+        },
+        //搜索框
+        search:function () {
+          this.axios.get('http://114.55.98.156:5656/api/user/',{
+            params:{
+              id:'this.userid',
+            },
+          })
+            .then(function (response) {
+              console.log(response);
+              this.search_id=response.data.username||response.data.roomname;
+            })
         },
 
       },

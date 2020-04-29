@@ -11,20 +11,30 @@
   </div>
   <div id="profile">
     <h1>Profile</h1>
-    <input placeholder="   Search for messages or users...">
+    <input placeholder="   Search for messages or users..." v-model="userid">
     <img id="img17" src="../../static/img17.jpg" height="38" width="34" @click="search" />
+    <div>{{search_id}}</div>
     <div id="photo_name">
-      <div id="photo"></div>
+      <img id="photo" src="" alt="头像" @click="great"/>
       <div id="name"></div>
     </div>
     <div id="info">
       <div class="info">
         <p>country</p>
-        <p></p>
+        <p>{{country}}</p>
       </div>
-      <div class="info">country</div>
-      <div class="info">country</div>
-      <div class="info">country</div>
+      <div class="info">
+        <p>phone</p>
+        <p>{{telephone}}</p>
+      </div>
+      <div class="info">
+        <p>email</p>
+        <p>{{email}}</p>
+      </div>
+      <div class="info">
+        <p>time</p>
+        <p>{{time}}</p>
+      </div>
     </div>
   </div>
   <div id="settings">
@@ -45,12 +55,13 @@
         </div>
         <span>Avatar</span>
         <div id="icon">
+<!--          -->
           <label for="img18.png">
             <div id="img18">
-              <img src="../../static/img18.png" height="45" width="53" @click="add_img"/>
+              <img src="../../static/img18.png" height="45" width="53" />
             </div>
           </label>
-          <input type="file" id="img18.png" name="icon" style="display: none">
+          <input type="file" id="img18.png" style="display: none" @change="add_img">
           <span class="photo1">You can upload jpg,gif or png files.</span><br>
           <span class="photo2">Max files size 3mb.</span>
         </div>
@@ -60,7 +71,7 @@
         <input id="phone" placeholder="(123)456-7890" type="tel" v-model="telephone"><br>
         <span>Email</span><br>
         <input id="email" placeholder="you@yoursite.com" type="email" v-model="email"><br>
-        <button @click="save">Save Preferences</button>
+        <button id="btn" @click="save">Save Preferences</button>
       </form>
     </div>
   </div>
@@ -72,83 +83,157 @@
         name: "profile",
         data(){
           return{
-            img:'',
-            img_url:'',
+            imgSave:'',
             username:'',
             telephone:'',
             email:'',
             country:'',
             time:'',
+            userid:'',
+            search_id:'',
           }
         },
         methods:{
           //搜索框
           search:function () {
-            this.axios.get('http://114.55.98.156:3000/auth/search',{
-              headers: {
-                // 'Content-Type': 'multipart/form-data'
-              }
-            }).then(function (res) {
-
+            this.axios.get('http://114.55.98.156:5656/api/user/',{
+              params:{
+                id:'this.userid',
+              },
             })
+              .then(function (response) {
+                console.log(response);
+                this.search_id=response.data.username||response.data.roomname;
+              })
           },
           //上传图片
-          add_img:function (event) {
-            let reader = new FileReader();
-            let img = event.target.files[0];
-            let accept = [".gif",".png",".jpg"];
-            let filePath = img.value; //文件的类型，判断是否是图片
-            let fileEnd=filePath.substring(filePath.indexOf("."));
-            let size = img.size; //文件的大小，判断图片的大小
-            let isNext=false;
-            for(let i=0;i<accept.length;i++){
-              if (fileEnd===accept[i]) {
-                isNext=true;
-                break;
-              }
-            }
-            if(!isNext){
-              alert('请选择我们支持的图片格式！');
-              return false;
-            }
-
-            //图片的大小(字节)
-            if (size > 3145728) {
-              alert('请选择3mb以内的图片！');
-              return false;
-            }
-            let form = new FormData();
-            form.append('file', icon);
+          submit_img:function () {
+            const that=this;
             //接口部分
-            this.axios.post("http://114.55.98.156:3000/auth/updates",{
-              //请求头
-              headers: {
-                // 'Content-Type': 'multipart/form-data'
-              }
-            }).then(response => {
-              console.log(response.data);
-              reader.readAsDataURL(img);//读出base64
-              reader.onloadend = function() {
-                let dataURL = reader.result;
-                console.log(dataURL);
-                this.img_url = dataURL;//src
-              }
-            }).catch(function(err) {
+            let params = new FormData;
+            params.append('file',file)
+            console.log(params);
+            this.axios.post("http://114.55.98.156:3000/auth/updates",params)
+              .then(res => {
+                console.log(res);
+                this.imgSave = res.data.image;
+                // sessionStorage.setItem('headImg',this.imgSave); //将图片保存，并能够在其他地方加载显示
+              }).catch(function(err) {
               console.log(err);
             });
           },
+          //上传图片，下载图片
+          add_img:function (event) {
+            window.file = event.target.files[0];
+            console.log(file.name);
+            let imgName=file.name;//拿到文件名
+            //文件名不可包含中文
+            let reg = new RegExp("[\\u4E00-\\u9FFF]+","g");
+            if(reg.test(imgName)) {alert("文件名不可包含汉字！"); }
+            //图片的大小(字节)
+            let size = file.size; //文件的大小，判断图片的大小
+            if (size > 3145728) {
+              alert('请选择3mb以内的图片！');
+              // return false;
+            }
+            //判断文件是否为图片
+            // 后缀获取
+            let suffix = '';
+            // 获取类型结果
+            let result = '';
+            try {
+              let fileArr = imgName.split('.');
+              suffix = fileArr[fileArr.length - 1];
+            } catch (err) {
+              suffix = '';
+            }
+            // fileName无后缀返回 false
+            if (!suffix) {
+              result = false;
+              return result;
+            }
+            // 图片格式
+            let imgList = ['png', 'jpg', 'gif'];
+            // 进行图片匹配
+            result = imgList.some(function (item) {
+              return item === suffix;
+            });
+            if (result) {
+              this.submit_img();
+            }else{
+              alert('请选择后缀为jpg,gif或者png的图片上传！');
+            }
+          },
+          //实时显示该图片在页面
+          great:function() {
+            //document.getElementById('btn').onclick = function () {
+              let imgFile = file;
+              console.log(imgFile);
+              let fr = new FileReader();
+              fr.onload = function () {
+                document.getElementById('photo').src = fr.result;
+              };
+              fr.readAsDataURL(imgFile);
+            //}
+          },
           //修改保存资料
           save:function(){
-
+            let qs = require('qs');
+            this.axios.post('http://114.55.98.156:3000/auth/updates',
+              qs.stringify({
+                telephone: this.telephone,
+                username:this.username,
+                email:this.email,
+              }))
+              .then(function (response) {
+                console.log(response);
+                if(response.data[0].AAB==="true"){
+                  this.great();
+                  console.log("success");
+                  alert("保存成功！");
+                }else{
+                  console.log("fail");
+                  alert("保存失败！");
+                }
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
           },
         },
       mounted() {
-
+        //请求用户资料
+        this.axios.post('http://114.55.98.156:3000/auth/current_user')
+          .then(function (response) {
+            console.log(response);
+            this.username=response.data.username;
+            this.telephone=response.data.telephone;
+            this.email=response.data.email;
+            this.country=response.data.country;
+            this.userid=response.data.id;
+            let imgfile = response.data.userphoto;
+            console.log(imgfile);
+            let frd = new FileReader();
+            frd.onload = function () {
+              document.getElementById('photo').src = frd.result;
+            };
+            frd.readAsDataURL(imgfile);
+          })
+        let T = new Date();
+        this.time=T.toLocaleTimeString();
       }
     }
 </script>
 
 <style scoped>
+  .info p{
+    font-size:15px;
+  }
+  #photo{
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+  }
   #menu_block{
     background-color: #f5f6fa;
     width: 80px;
@@ -211,17 +296,19 @@
   }
   #photo_name{
     height: 170px;
-    width: 90%;
-    margin-left: 20px;
-    background-color: #fff;
-    margin-top: -25px;
+    width: 378px;
+    background-color:#fff;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
+    margin: 0px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   #info{
     width: 90%;
-    height: 280px;
+    height: 250px;
     margin-left: 20px;
     background-color: #fff;
     margin-top: 20px;
@@ -230,7 +317,7 @@
     border-radius: 5px;
   }
   .info{
-    height: 70px;
+    height: 48px;
     width: 90%;
     border-bottom: 1px solid #f6f7fb;
   }
