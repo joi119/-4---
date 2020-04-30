@@ -9,35 +9,42 @@
   </div>
   <div id="top">
     <h1>Create group</h1>
-    <input  placeholder="Search for messages or users...">
+    <input  placeholder="Search for messages or users..." v-model="search_id">
     <span>
-        <img id="img17" src="../../static/img17.jpg" height="34" width="28"/>
+        <img id="img17" src="../../static/img17.jpg" height="34" width="28" @click="search"/>
     </span>
+    <div>{{searched_id}}</div>
   </div>
   <div id="sign_in" >
-    <form class="sign_in" action="" method="" name="">
+    <form class="sign_in" >
       <div id="photo">
-        <div id="img18">
-          <img src="../../static/img18.png" height="72" width="86"/>
-        </div>
-        <span class="photo1">You can upload jpg,gif or png files.</span><br>
+        <label for="img18.png">
+          <div id="img18">
+            <img src="../../static/img18.png" height="72" width="86"/>
+          </div>
+        </label>
+        <input type="file" id="img18.png" style="display: none" @change="add_img">
+        <span class="photo1" >You can upload jpg,gif or png files.</span><br>
         <span class="photo2">
-            Max files size 3mb.</span>
+            Max files size 3mb.
+        </span>
       </div>
+    </form>
+    <form class="sign_in" >
       <div class="input">
         <span>Name:</span>
-        <input type="text" placeholder="Group Name">
+        <input type="text" placeholder="Group Name" required="required" v-model="roomname">
       </div>
       <div class="input">
         <span>Topic(optional):</span>
-        <input type="text" placeholder="Group Topic">
+        <input type="text" placeholder="Group Topic" required="required" v-model="topic">
       </div>
       <div class="input">
         <span>Description:</span>
-        <input type="text" placeholder="Group Description">
+        <input type="text" placeholder="Group Description" v-model="description">
       </div>
       <div id="btn_sign">
-        <button id="btn_sign_in">Create group</button>
+        <button id="btn_sign_in" @click="create_group">Create group</button>
       </div>
     </form>
   </div>
@@ -46,7 +53,120 @@
 
 <script>
     export default {
-        name: "creategroup"
+        name: "creategroup",
+        data(){
+          return{
+            search_id:'',
+            searched_id:'',
+            roomname:'',
+            topic:'',
+            description:'',
+          }
+        },
+        methods:{
+          //搜索框
+          search:function () {
+            const that=this;
+            let search_id=this.search_id;
+            this.axios.get('http://114.55.98.156:3000/auth/search',{
+              params:{
+                search_id,
+              },
+            })
+              .then(function (response) {
+                console.log(response);
+                that.searched_id=response.data.username||response.data.roomname;
+                if(that.searched_id===''){
+                  alert("你搜索的用户/房间不存在！")
+                }
+              })
+          },
+          submit_img:function () {
+            const that=this;
+            //接口部分
+            let params = new FormData;
+            params.append('file',file)
+            console.log(params);
+            this.axios.post("http://114.55.98.156:3000/auth/updates",params)
+              .then(res => {
+                console.log(res);
+                this.imgSave = res.data.image;
+                alert("群头像设置成功！")
+                // sessionStorage.setItem('headImg',this.imgSave); //将图片保存，并能够在其他地方加载显示
+              }).catch(function(err) {
+              console.log(err);
+            });
+          },
+          //上传图片，下载图片
+          add_img:function (event) {
+            window.file = event.target.files[0];
+            console.log(file.name);
+            let imgName=file.name;//拿到文件名
+            //文件名不可包含中文
+            let reg = new RegExp("[\\u4E00-\\u9FFF]+","g");
+            if(reg.test(imgName)) {alert("文件名不可包含汉字！"); }
+            //图片的大小(字节)
+            let size = file.size; //文件的大小，判断图片的大小
+            if (size > 3145728) {
+              alert('请选择3mb以内的图片！');
+              // return false;
+            }
+            //判断文件是否为图片
+            // 后缀获取
+            let suffix = '';
+            // 获取类型结果
+            let result = '';
+            try {
+              let fileArr = imgName.split('.');
+              suffix = fileArr[fileArr.length - 1];
+            } catch (err) {
+              suffix = '';
+            }
+            // fileName无后缀返回 false
+            if (!suffix) {
+              result = false;
+              return result;
+            }
+            // 图片格式
+            let imgList = ['png', 'jpg', 'gif'];
+            // 进行图片匹配
+            result = imgList.some(function (item) {
+              return item === suffix;
+            });
+            if (result) {
+              this.submit_img();
+            }else{
+              alert('请选择后缀为jpg,gif或者png的图片上传！');
+            }
+          },
+          create_group:function(){
+            let qs = require('qs');
+            const that=this;
+            this.axios.post('http://114.55.98.156:3000/auth/createroom',
+              qs.stringify({
+                roomname: this.roomname,
+                topic:this.topic,
+                description:this.description,
+              }))
+              .then(function (response) {
+                console.log(response);
+                if(response.data[0].AAB==="true"){
+                  console.log("success");
+                  alert("创建成功！");
+                  that.$router.push({ path: '/chat' });
+                }else{
+                  console.log("fail");
+                  alert("创建失败！");
+                }
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+          }
+        },
+        mounted() {
+
+        }
     }
 </script>
 
@@ -108,7 +228,7 @@
   }
   .sign_in{
     width: 700px;
-    height: 550px;
+    height: 250px;
     margin:0 auto;
   }
   #photo{

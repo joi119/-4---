@@ -12,6 +12,9 @@
       <a href="#/profile">
         <h1>点我在线修改资料</h1>
       </a>
+      <a href="#/creategroup">
+        <h1>点我在线创建群聊</h1>
+      </a>
     </div>
   </div>
 </template>

@@ -10,9 +10,9 @@
       <div id="top">
         <div id="sign_inn" @click="sign_in">Sign in</div>
         <div id="sign_up" @click="sign_up">Sign up</div>
-        <input placeholder="     Search url here">
+        <input placeholder="     Search url here" v-model="search_id">
         <button id="btn" @click="search">search</button>
-        <div>{{search_id}}</div>
+        <div>{{searched_id}}</div>
       </div>
       <!--注册-->
       <div id="sign_in" >
@@ -88,8 +88,8 @@
           email_hash:'',
           country:'',
           register_bool:'',
-          userid:'',
           search_id:'',
+          searched_id:'',
         }
       },
       methods: {
@@ -178,7 +178,7 @@
               console.log(response);
               if(response.data[0].AAB==="true"){
                 console.log("success");
-                that.$router.push({ path: '/profile/id="this.username"' });
+                that.$router.push({ path: '/profile' });
               }else{
                 console.log("fail");
                 alert("用户名或密码错误，请重新登录！");
@@ -191,14 +191,19 @@
         },
         //搜索框
         search:function () {
-          this.axios.get('http://114.55.98.156:5656/api/user/',{
+          const that=this;
+          let room_url_user=this.search_id;
+          this.axios.get('http://114.55.98.156:3000/auth/search',{
             params:{
-              id:'this.userid',
+              room_url_user,
             },
           })
             .then(function (response) {
               console.log(response);
-              this.search_id=response.data.username||response.data.roomname;
+              that.searched_id=response.data.username||response.data.roomname;
+              if(that.searched_id===''){
+                alert("你搜索的用户/房间不存在！")
+              }
             })
         },
 

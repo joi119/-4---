@@ -11,9 +11,9 @@
   </div>
   <div id="profile">
     <h1>Profile</h1>
-    <input placeholder="   Search for messages or users..." v-model="userid">
+    <input placeholder="   Search for messages or users..." v-model="search_id">
     <img id="img17" src="../../static/img17.jpg" height="38" width="34" @click="search" />
-    <div>{{search_id}}</div>
+    <div>{{searched_id}}</div>
     <div id="photo_name">
       <img id="photo" src="" alt="头像" @click="great"/>
       <div id="name"></div>
@@ -45,7 +45,7 @@
       </div>
     </div>
     <div id="form">
-      <form id="change">
+      <form class="change" action="" method="" name="">
         <div id="account_block">
           <div id="account">
             <img id="img20" src="../../static/img20.png" height="35" width="41"/>
@@ -65,6 +65,8 @@
           <span class="photo1">You can upload jpg,gif or png files.</span><br>
           <span class="photo2">Max files size 3mb.</span>
         </div>
+      </form>
+      <form class="change" action="" method="" name="">
         <span>Name</span><br>
         <input class="name" placeholder="Type your name" type="text" v-model="username"><br>
         <span>Phone</span><br>
@@ -89,34 +91,39 @@
             email:'',
             country:'',
             time:'',
-            userid:'',
             search_id:'',
+            searched_id:'',
           }
         },
         methods:{
           //搜索框
           search:function () {
-            this.axios.get('http://114.55.98.156:5656/api/user/',{
+            const that=this;
+            let room_url_user=this.search_id;
+            this.axios.get('http://114.55.98.156:3000/auth/search',{
               params:{
-                id:'this.userid',
+                room_url_user,
               },
             })
               .then(function (response) {
                 console.log(response);
-                this.search_id=response.data.username||response.data.roomname;
+                that.searched_id=response.data.username||response.data.roomname;
+                if(that.searched_id===''){
+                  alert("你搜索的用户/房间不存在！")
+                }
               })
           },
           //上传图片
           submit_img:function () {
-            const that=this;
+            //const that=this;
             //接口部分
-            let params = new FormData;
+            window.params = new FormData;
             params.append('file',file)
             console.log(params);
             this.axios.post("http://114.55.98.156:3000/auth/updates",params)
               .then(res => {
                 console.log(res);
-                this.imgSave = res.data.image;
+                that.imgSave = res.data.image;
                 // sessionStorage.setItem('headImg',this.imgSave); //将图片保存，并能够在其他地方加载显示
               }).catch(function(err) {
               console.log(err);
@@ -178,17 +185,18 @@
           },
           //修改保存资料
           save:function(){
-            let qs = require('qs');
-            this.axios.post('http://114.55.98.156:3000/auth/updates',
-              qs.stringify({
-                telephone: this.telephone,
-                username:this.username,
-                email:this.email,
-              }))
+            //let qs = require('qs');
+            const that=this;
+            window.param = new FormData;
+            param.append('text',this.username);
+            param.append('tel',this.telephone);
+            param.append('email',this.email);
+            console.log(params);
+            this.axios.post('http://114.55.98.156:3000/auth/updates',param)
               .then(function (response) {
                 console.log(response);
                 if(response.data[0].AAB==="true"){
-                  this.great();
+                  that.great();
                   console.log("success");
                   alert("保存成功！");
                 }else{
@@ -203,21 +211,22 @@
         },
       mounted() {
         //请求用户资料
+        const that=this;
         this.axios.post('http://114.55.98.156:3000/auth/current_user')
           .then(function (response) {
             console.log(response);
-            this.username=response.data.username;
-            this.telephone=response.data.telephone;
-            this.email=response.data.email;
-            this.country=response.data.country;
-            this.userid=response.data.id;
+            that.username=response.data.username;
+            that.telephone=response.data.telephone;
+            that.email=response.data.email;
+            that.country=response.data.country;
+            that.userid=response.data.id;
             let imgfile = response.data.userphoto;
             console.log(imgfile);
-            let frd = new FileReader();
-            frd.onload = function () {
-              document.getElementById('photo').src = frd.result;
-            };
-            frd.readAsDataURL(imgfile);
+            // let frd = new FileReader();
+            // frd.onload = function () {
+            //   document.getElementById('photo').src = frd.result;
+            // };
+            // frd.readAsDataURL(imgfile);
           })
         let T = new Date();
         this.time=T.toLocaleTimeString();
@@ -360,13 +369,13 @@
     width: 700px;
     height: 490px;
   }
-  #change{
+  .change{
     margin-top: 50px;
     margin-left: 160px;
     padding-bottom: 10px;
     border: 1px solid #f5f6fa;
   }
-  #change input{
+  .change input{
     border:none;
     border-radius: 5px;
     background-color: #edeef6;

@@ -204,6 +204,7 @@
         console.log('加载中---');
         //subscribe为真则后端调用connect
         this.$socket.emit('connect', { subscribe: true });
+        //群信息：群名群描述 群头像 群分享 群主可以删除群聊
       }
 
     }
