@@ -1,21 +1,21 @@
 <!--vue模板只能有一个根对象，另外要用div或别的元素包裹全部的元素-->
 <template>
   <div id="app">
-    <a href="#/chat">
-      跳转到聊天室
-    </a>
+<!--    <a href="#/chat">-->
+<!--      跳转到聊天室-->
+<!--    </a>-->
     <router-view/>
-    <div id="menu_block">
-      <a href="#/access">
-        <h1>欢迎来到心灵家园，点此至登陆界面</h1>
-      </a>
-      <a href="#/profile">
-        <h1>点我在线修改资料</h1>
-      </a>
-      <a href="#/creategroup">
-        <h1>点我在线创建群聊</h1>
-      </a>
-    </div>
+<!--    <div id="menu_block">-->
+<!--      <a href="#/access">-->
+<!--        <h1>欢迎来到心灵家园，点此至登陆界面</h1>-->
+<!--      </a>-->
+<!--      <a href="#/profile">-->
+<!--        <h1>点我在线修改资料</h1>-->
+<!--      </a>-->
+<!--      <a href="#/creategroup">-->
+<!--        <h1>点我在线创建群聊</h1>-->
+<!--      </a>-->
+<!--    </div>-->
   </div>
 </template>
 

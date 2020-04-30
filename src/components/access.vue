@@ -1,6 +1,5 @@
 <template>
-  <div>
-
+  <div id="all">
     <div id="menu_block">
       <a href="/">
         <img id="img1" src="../../static/img1.png" height="65" width="62"/>
@@ -12,7 +11,7 @@
         <div id="sign_up" @click="sign_up">Sign up</div>
         <input placeholder="     Search url here" v-model="search_id">
         <button id="btn" @click="search">search</button>
-        <div>{{searched_id}}</div>
+        <a href="room_url">{{searched_id}}</a>
       </div>
       <!--注册-->
       <div id="sign_in" >
@@ -90,6 +89,7 @@
           register_bool:'',
           search_id:'',
           searched_id:'',
+          room_url:''
         }
       },
       methods: {
@@ -201,6 +201,7 @@
             .then(function (response) {
               console.log(response);
               that.searched_id=response.data.username||response.data.roomname;
+              that.room_url=response.data.room_url;
               if(that.searched_id===''){
                 alert("你搜索的用户/房间不存在！")
               }
@@ -212,6 +213,9 @@
 </script>
 
 <style scoped>
+  #all{
+    min-width: 1000px;
+  }
   #img1{
     position: absolute;
   }
