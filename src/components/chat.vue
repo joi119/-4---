@@ -47,10 +47,12 @@
         </div>
 
         <div id="chat_box">
-          <li v-for="item in messageList" :key="index" id="msgList">
-            <img :src="item.icon_url"  alt="头像" id="icon">
-            <span id="msg">{{item.thing}}</span>
-          </li>
+          <div style="height: 489px; overflow:scroll">
+            <li v-for="item in messageList" :key="index" id="msgList">
+              <img :src="item.icon_url"  alt="头像" id="icon">
+              <span id="msg">{{item.thing}}</span>
+            </li>
+        </div>
           <div id="input_box_block">
             <div id="input_box">
               <input placeholder="Type your message..." v-model="socketData" @keyup.enter="clickButton">
@@ -148,9 +150,9 @@
           description:'',
           room_url:'',
           roomphoto:'',
-		  seek_user:'',
-		  seek_room_url:'',
-          displayed:''
+          seek_user:'',
+          seek_room_url:'',
+          displayed:'',
         }
       },
       sockets:{
@@ -172,7 +174,7 @@
           this.username = val;
         },
         //接收消息、头像
-        send_message(data){     // getVal 名字自定义 与服务端的保持一致
+        send_message(data){     // 名字自定义 与服务端的保持一致
           console.log(data);
           let msg = data.message;
           let icon_path = data.photo;
@@ -332,9 +334,27 @@
             that.room_url = res.data.room_url;
             that.roomphoto = "data:image/jpg;base64," + res.data.roomphoto;
             that.author_name = res.data.username;
+            // for(let i=0;i<res.data.messagers.length;i++){
+            //   that.bodyList.push({
+            //     things:res.data.messagers[i].body
+            //   });
+            // }
+            // that.messageList = that.bodyList;
             if( that.author_name === that.username ){
               that.displayed = true;
             }
+          }).catch(function(err) {
+          console.log(err);
+        });
+        this.axios.get("http://127.0.0.1:5000/message",)
+          .then(res => {
+            console.log(res);
+            let preList = [];
+            preList.push({
+              thing: res.data.body,
+              icon_url : "data:image/jpg;base64," + res.data.userphoto,
+            })
+            that.messageList = preList
           }).catch(function(err) {
           console.log(err);
         });
