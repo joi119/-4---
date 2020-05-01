@@ -11,9 +11,8 @@
     <h1>Create group</h1>
     <input  placeholder="Search for messages or users..." v-model="search_id">
     <span>
-        <img id="img17" src="../../static/img17.jpg" height="34" width="28" @click="search"/>
+        <img id="img17" src="../../static/img17.jpg" height="34" width="28" @click="seek"/>
     </span>
-    <a href="room_url">{{searched_id}}</a>
   </div>
   <div id="sign_in" >
     <form class="sign_in" >
@@ -59,28 +58,40 @@
         roomname:'',
         topic:'',
         description:'',
-        room_url:''
+        room_url:'',
+		ok:'',
+		seek_user:'',
+		seek_room_url:''
       }
     },
     methods:{
       //搜索框
-      search:function () {
-        const that=this;
-        let search_id=this.search_id;
-        this.axios.get('http://127.0.0.1:5000/auth/search',{
-          params:{
-            search_id,
-          },
-        })
-          .then(function (response) {
-            console.log(response);
-            that.room_url=response.data.room_url;
-            that.searched_id=response.data.username||response.data.roomname;
-            if(that.searched_id===''){
-              alert("你搜索的用户/房间不存在！")
-            }
+		seek(){
+          const that=this;
+          let room_url_user=this.search_id;
+          this.axios.get('http://114.55.98.156:3000/auth/search',{
+            params:{
+              room_url_user,
+            },
           })
-      },
+            .then(function (response) {
+              console.log(response);
+              if(response.data[0].judge==='user'){
+                that.ok=false;
+                that.seek_user=response.data[1].messages.body;
+                let inf="您所查找的" + that.seek_user + "存在";
+                alert(inf);
+              }
+              else if(response.data[0].judge==='room'){
+                that.ok=true;
+                that.seek_room_url=response.data[1].room_url;
+                that.$router.push({ path: '/chat' });
+              }
+              else{
+                alert("您查找的的用户/房间不存在！")
+              }
+            })
+        },
       submit_img:function () {
         const that=this;
         //接口部分
@@ -90,7 +101,7 @@
         params.append('description',this.description)
         params.append('topic',this.topic)
         console.log(params);
-        this.axios.post("http://127.0.0.1:5000/auth/createroom",params)
+        this.axios.post("http://114.55.98.156:3000/auth/createroom",params)
           .then(res => {
             console.log(res);
             this.imgSave = res.data.image;
@@ -151,7 +162,7 @@
       create_group:function(){
         let qs = require('qs');
         const that=this;
-        this.axios.post('http://127.0.0.1:5000/auth/createroom',
+        this.axios.post('http://114.55.98.156:3000/auth/createroom',
           qs.stringify({
             roomname: this.roomname,
             topic:this.topic,
@@ -159,12 +170,9 @@
           }))
           .then(function (response) {
             console.log(response);
-            //获取分享链接
-            let share_url=response.data.room_url;
             if(response.data[0].AAB==="true"){
               console.log("success");
-              let info="创建成功！您的房间地址为"+share_url;
-              alert(info);
+              alert("创建成功！");
               that.$router.push({ path: '/chat' });
             }else{
               console.log("fail");
@@ -176,19 +184,9 @@
           });
       },
       skip_access(){
-        alert("您真的要离开心灵家园吗？")
-        this.axios.get("http://114.55.98.156:3000/logout",)
-          .then(res => {
-            console.log(res);
-            if(res.data.AAD===true){
-              alert("退出登录成功！")
-              this.$router.push('/access')
-            }else{
-              this.$router.push('/chat')
-            }
-          }).catch(function(err) {
-          console.log(err);
-        });
+        alert("您真的要离开心灵家园吗？");
+        this.$router.push('/access');
+        alert("退出登录成功！");
       },
       skip_create(){
         this.$router.push('/creategroup')

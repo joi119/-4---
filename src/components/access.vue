@@ -10,8 +10,7 @@
         <div id="sign_inn" @click="sign_in">Sign in</div>
         <div id="sign_up" @click="sign_up">Sign up</div>
         <input placeholder="     Search url here" v-model="search_id">
-        <button id="btn" @click="search">search</button>
-        <a href="room_url">{{searched_id}}</a>
+		<button id="btn" @click="seek">search</button>
       </div>
       <!--注册-->
       <div id="sign_in" >
@@ -59,7 +58,7 @@
             </div>
             <div class="input">
               <span>Password:</span>
-              <input typ e="password" v-model="password_hash">
+              <input type="password" v-model="password_hash">
             </div>
             <div class="btn_sign">
               <button class="btn_sign_in" @click="submit_login">sign up</button>
@@ -89,7 +88,10 @@
           register_bool:'',
           search_id:'',
           searched_id:'',
-          room_url:''
+          room_url:'',
+          ok:'',
+          seek_room_url:'',
+          seek_user:''
         }
       },
       methods: {
@@ -190,7 +192,7 @@
             });
         },
         //搜索框
-        search:function () {
+		seek(){
           const that=this;
           let room_url_user=this.search_id;
           this.axios.get('http://114.55.98.156:3000/auth/search',{
@@ -200,10 +202,19 @@
           })
             .then(function (response) {
               console.log(response);
-              that.searched_id=response.data.username||response.data.roomname;
-              that.room_url=response.data.room_url;
-              if(that.searched_id===''){
-                alert("你搜索的用户/房间不存在！")
+              if(response.data[0].judge==='user'){
+                that.ok=false;
+                that.seek_user=response.data[1].messages.body;
+                let inf="您所查找的" + that.seek_user + "存在";
+                alert(inf);
+              }
+              else if(response.data[0].judge==='room'){
+                that.ok=true;
+                that.seek_room_url=response.data[1].room_url;
+                that.$router.push({ path: '/chat' });
+              }
+              else{
+                alert("您查找的的用户/房间不存在！")
               }
             })
         },

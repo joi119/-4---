@@ -14,7 +14,9 @@
       <div id="right">
         <div id="chat_name_block">
           <div id="chat_name">
-            <a href="room_url">{{roomname}}</a>
+            <!--群名称群头像-->
+            <img :src="roomphoto" id="room_img"/>
+            <p id="room_name">{{roomname}}</p>
             <img @click="search=!search" id="img8" src="../../static/img8.png" height="37" width="39"/>
             <img @click="share" id="img9" src="../../static/img9.png" height="27" width="36"/>
             <label for="checkbox">
@@ -29,7 +31,7 @@
               <input type="button" id="Mute_button">
               <p>Delete</p>
               <label for="Delete_button">
-                <img id="img14" src="../../static/img14.png" height="38" width="32"/>
+                <img id="img14" src="../../static/img14.png" height="38" width="32" v-show="displayed"/>
               </label>
               <input type="button" id="Delete_button">
             </div>
@@ -41,13 +43,12 @@
             <span>
                 <img id="img17" src="../../static/img17.jpg" height="34" width="28" @click="seek"/>
             </span>
-            <a href="room_url">{{searched_id}}</a>
           </div>
         </div>
 
         <div id="chat_box">
           <li v-for="item in messageList" :key="index" id="msgList">
-            <img src="data:image/png;base64,item.icon_url"  alt="头像" id="icon">
+            <img :src="item.icon_url"  alt="头像" id="icon">
             <span id="msg">{{item.thing}}</span>
           </li>
           <div id="input_box_block">
@@ -69,10 +70,12 @@
             </div>
           </div>
           <div class="name_icon">
-            <h2>这是群名和群头像</h2>
+            <img :src="roomphoto" class="share_photo"/>
+            <h2>{{roomname}}</h2>
+            <p>{{room_url}}</p>
           </div>
           <div id="introduction">
-            <p>introduction</p>
+            <p>{{description}}</p>
           </div>
           <div id="list">
             <ul id="share_menu">
@@ -92,7 +95,8 @@
             </div>
           </div>
           <div id="name_icon">
-            <h2>这是群名和群头像</h2>
+            <h2>{{roomname}}</h2>
+            <img :src="roomphoto" class="share_photo"/>
           </div>
           <form class="list">
             <span>Photo</span>
@@ -123,7 +127,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -143,7 +146,11 @@
           roomname:'',
           topic:'',
           description:'',
-          room_url:''
+          room_url:'',
+          roomphoto:'',
+		  seek_user:'',
+		  seek_room_url:'',
+          displayed:''
         }
       },
       sockets:{
@@ -159,10 +166,6 @@
           console.log('断开服务器连接');
           this.$socket.emit('leave')
         },
-        // reconnect(){
-        //   console.log("重新链接");
-        //   this.$socket.emit('connect', { bool : true });
-        // },
         //拿用户名
         get_username(val){
           console.log('val');
@@ -170,12 +173,12 @@
         },
         //接收消息、头像
         send_message(data){     // getVal 名字自定义 与服务端的保持一致
-          console.log('data');
-          let msg = data.msg;
-          let icon_path = data.userphoto;
+          console.log(data);
+          let msg = data.message;
+          let icon_path = data.photo;
           this.messageList.push({
             thing:msg,
-            icon_url: icon_path
+            icon_url:"data:image/jpg;base64," + icon_path
           });
         },
 
@@ -203,16 +206,15 @@
         //向服务端发消息
         clickButton () {
           let data = this.socketData;
-          if(data===''){
+          if(data===' '){
             alert("发送的内容不能为空！")
           }else{
             console.log(data);
             this.$socket.emit('emit_method', data);
             this.socketData='';
           }
-
         },
-        seek(){
+		seek(){
           const that=this;
           let room_url_user=this.search_id;
           this.axios.get('http://114.55.98.156:3000/auth/search',{
@@ -222,10 +224,19 @@
           })
             .then(function (response) {
               console.log(response);
-              that.room_url=response.data.room_url;
-              that.searched_id=response.data.username||response.data.roomname;
-              if(that.searched_id===''){
-                alert("你搜索的用户/房间不存在！")
+              if(response.data[0].judge==='user'){
+                that.ok=false;
+                that.seek_user=response.data[1].messages.body;
+                let inf="您所查找的" + that.seek_user + "存在";
+                alert(inf);
+              }
+              else if(response.data[0].judge==='room'){
+                that.ok=true;
+                that.seek_room_url=response.data[1].room_url;
+                that.$router.push({ path: '/chat' });
+              }
+              else{
+                alert("您查找的的用户/房间不存在！")
               }
             })
         },
@@ -260,7 +271,7 @@
             return result;
           }
           // 图片格式
-          let imgList = ['png', 'jpg', 'gif'];
+          let imgList = ['jpg'];
           // 进行图片匹配
           result = imgList.some(function (item) {
             return item === suffix;
@@ -291,19 +302,9 @@
           });
         },
         skip_access(){
-          alert("您真的要离开心灵家园吗？")
-          this.axios.get("http://114.55.98.156:3000/logout",)
-            .then(res => {
-              console.log(res);
-              if(res.data.AAD===true){
-                alert("退出登录成功！")
-                this.$router.push('/access')
-              }else{
-                this.$router.push('/chat')
-              }
-            }).catch(function(err) {
-            console.log(err);
-          });
+          alert("您真的要离开心灵家园吗？");
+          this.$router.push('/access');
+          alert("退出登录成功！");
         },
         skip_create(){
           this.$router.push('/creategroup')
@@ -316,11 +317,27 @@
         },
       },
       mounted() {
+        const that = this;
         console.log('加载中---');
         //subscribe为真则后端调用connect
-        this.$socket.emit('connect', { subscribe: true });
+        this.$socket.emit('connect');
         //群信息：群名群描述 群头像 群分享 群主可以删除群聊
-
+        that.displayed = false;
+        this.axios.get("http://114.55.98.156:3000/auth/current_room",)
+          .then(res => {
+            console.log(res);
+            that.roomname = res.data.roomname;
+            that.topic = res.data.topic;
+            that.description = res.data.description;
+            that.room_url = res.data.room_url;
+            that.roomphoto = "data:image/jpg;base64," + res.data.roomphoto;
+            that.author_name = res.data.username;
+            if( that.author_name === that.username ){
+              that.displayed = true;
+            }
+          }).catch(function(err) {
+          console.log(err);
+        });
       }
 
     }
@@ -328,7 +345,22 @@
 </script>
 
 <style scoped>
-
+  .name_icon h2{
+    float: left;
+  }
+  #room_name{
+    float: left;
+  }
+  .share_photo{
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+  }
+  #room_img{
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+  }
   #all{
     min-width: 1000px;
   }

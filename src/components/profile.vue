@@ -11,11 +11,10 @@
   </div>
   <div id="profile">
     <h1>Profile</h1>
-    <input placeholder="   Search for messages or users..." v-model="search_id">
-    <img id="img17" src="../../static/img17.jpg" height="38" width="34" @click="search" />
-    <a href="room_url">{{searched_id}}</a>
+	<input placeholder="   Search for messages or users..." v-model="search_id">
+    <img id="img17" src="../../static/img17.jpg" height="38" width="34" @click="seek" />
     <div id="photo_name">
-      <img id="photo" src="data:image/png;base64,imgfile" alt="头像" @click="great"/>
+      <img id="photo" :src="imgfile" alt="头像" @click="great"/>
       <div id="name">{{username}}</div>
     </div>
     <div id="info">
@@ -92,28 +91,37 @@
             searched_id:'',
             imgfile:'',
             room_url:'',
-            statu:''
+			ok:'',
+			seek_user:'',
+			seek_room_url:''
           }
         },
         methods:{
           //搜索框
-          search:function () {
-            const that=this;
-            let room_url_user=this.search_id;
-            this.axios.get('http://127.0.0.1:5000/auth/search',{
-              params:{
-                room_url_user,
-              },
+		seek(){
+          const that=this;
+          let room_url_user=this.search_id;
+          this.axios.get('http://114.55.98.156:3000/auth/search',{
+            params:{
+              room_url_user,
+            },
+          })
+            .then(function (response) {
+              console.log(response);
+              if(response.data[0].judge==='user'){
+                that.seek_user=response.data[1].username;
+                let inf="您所查找的" + that.seek_user + "存在";
+                alert(inf);
+              }
+              else if(response.data[0].judge==='room'){
+                that.seek_room_url=response.data[1].room_url;
+                that.$router.push({ path: '/chat' });
+              }
+              else{
+                alert("您查找的的用户/房间不存在！")
+              }
             })
-              .then(function (response) {
-                console.log(response);
-                that.room_url=response.data.room_url;
-                that.searched_id=response.data.username||response.data.roomname;
-                if(that.searched_id===''){
-                  alert("你搜索的用户/房间不存在！")
-                }
-              })
-          },
+        },
 
           //修改资料
           submit_img:function () {
@@ -125,7 +133,7 @@
             params.append('telephone',that.telephone)
             params.append('email',that.email)
             console.log(params);
-            this.axios.post("http://127.0.0.1:5000/auth/updates",params)
+            this.axios.post("http://114.55.98.156:3000/auth/updates",params)
               .then(res => {
                 console.log(res);
                 // that.imgSave = res.data.image;
@@ -166,7 +174,7 @@
               return result;
             }
             // 图片格式
-            let imgList = ['png', 'jpg', 'gif'];
+            let imgList = ['jpg'];
             // 进行图片匹配
             result = imgList.some(function (item) {
               return item === suffix;
@@ -190,19 +198,9 @@
             //}
           },
           skip_access(){
-            alert("您真的要离开心灵家园吗？")
-            this.axios.get("http://114.55.98.156:3000/logout",)
-              .then(res => {
-                console.log(res);
-                if(res.data.AAD===true){
-                  alert("退出登录成功！")
-                  this.$router.push('/access')
-                }else{
-                  this.$router.push('/chat')
-                }
-              }).catch(function(err) {
-              console.log(err);
-            });
+            alert("您真的要离开心灵家园吗？");
+            this.$router.push('/access');
+            alert("退出登录成功！");
           },
           skip_create(){
             this.$router.push('/creategroup')
@@ -211,12 +209,8 @@
             this.$router.push('/profile')
           },
           skip_chat(){
-            if(this.statu){
-              this.$router.push('/chat')
-            }else{
-              alert("您还未加入任何群聊！")
-            }
-          }
+            this.$router.push('/chat')
+          },
           //修改保存资料
           // save:function(){
           //   //let qs = require('qs');
@@ -225,7 +219,7 @@
           //   params.append('tel',this.telephone);
           //   params.append('email',this.email);
           //   console.log(params);
-          //   this.axios.post('http://127.0.0.1:5000/auth/updates',params)
+          //   this.axios.post('http://114.55.98.156:3000/auth/updates',params)
           //     .then(function (response) {
           //       console.log(response);
           //       if(response.data[0].AAB==="true"){
@@ -245,16 +239,15 @@
       mounted() {
         //请求用户资料
         const that=this;
-        this.axios.post('http://127.0.0.1:5000/auth/current_user')
+        this.axios.post('http://114.55.98.156:3000/auth/current_user')
           .then(function (response) {
             console.log(response);
-            that.username = response.data.username;
-            that.telephone = response.data.telephone;
-            that.email = response.data.email_hash;
-            that.country = response.data.country;
-            that.userid = response.data.id;
-            that.imgfile = response.data.userphoto;
-            that.statu = response.data.enter_room;
+            that.username=response.data.username;
+            that.telephone=response.data.telephone;
+            that.email=response.data.email_hash;
+            that.country=response.data.country;
+            that.userid=response.data.id;
+            that.imgfile = "data:image/jpg;base64," + response.data.userphoto;
             console.log(that.imgfile);
           })
             let T = new Date();
